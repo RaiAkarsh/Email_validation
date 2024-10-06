@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Validation Form</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        input {
+            margin: 10px 0;
+            padding: 10px;
+            width: 300px;
+        }
+        button {
+            padding: 10px 15px;
+        }
+        #message {
+            margin-top: 10px;
+            color: red; /* Default to red for error messages */
+        }
+        iframe {
+            width: 100%;
+            height: 600px; /* Adjust height as necessary */
+            border: none;
+            margin-top: 20px; /* Space above the iframe */
+            display: none; /* Hide the iframe initially */
+        }
+        #adminSection {
+            margin-top: 20px;
+        }
+        #adminInput {
+            display: none; /* Hide admin input by default */
+        }
+    </style>
+</head>
+<body>
+    <h2>Email Submission Form</h2>
+    <form id="emailForm">
+        <label for="email">Enter your email:</label><br>
+        <input type="text" id="email" name="email" required placeholder="example.cs.aiml22@gla.ac.in"><br>
+        
+        <button type="submit">Validate and Show Form</button>
+        <div id="message"></div>
+    </form>
+
+    <div id="formContainer">
+        <iframe id="googleForm"  src="https://docs.google.com/forms/d/e/1FAIpQLSdOP0zxvsgSmmFx8c93DUC_qW-HnFAUIqbgNUEX652XuxFh2A/viewform?embedded=true" width="640" height="525" frameborder="0" marginheight="0" marginwidth="0">Loading…</iframe>
+    </div>
+
+    <div id="adminSection">
+        <h3>Admin Section</h3>
+        <input type="password" id="adminPassword" placeholder="Enter admin password"><br>
+        <button id="adminLogin">Login</button>
+        <div id="adminInput">
+            <input type="text" id="allowedPartsInput" placeholder="Enter new allowed parts (comma separated)">
+            <button id="changeAllowedParts">Change Allowed Parts</button>
+            <div id="adminMessage"></div>
+        </div>
+    </div>
+
+    <script>
+        let allowedParts = ['aiml', 'da', 'csf']; // Initial allowed parts for the email
+        let exceptions = []; // Add specific emails to this array if needed
+
+        // Function to create regex for the primary pattern
+        function createRegex(allowedParts) {
+            const joinedParts = allowedParts.join('|');
+            return new RegExp(`^[a-zA-Z0-9._%+-]+\\.cs\\.(${joinedParts})\\d{2}@gla\\.ac\\.in$`);
+        }
+
+        let primaryPattern = createRegex(allowedParts);
+
+        // Validate function
+        function validateEmail(email) {
+            return primaryPattern.test(email);
+        }
+
+        // Form submission event listener
+        document.getElementById('emailForm').addEventListener('submit', function(event) {
+            event.preventDefault(); // Prevent default form submission
+
+            const emailInput = document.getElementById('email').value.trim();
+
+            // Validate email
+            if (validateEmail(emailInput) && !exceptions.includes(emailInput)) {
+                // Show success message
+                document.getElementById('message').innerText = "Email is valid! You may proceed to the form.";
+                document.getElementById('message').style.color = "green";
+
+                // Show the Google Form iframe
+                document.getElementById('googleForm').style.display = "block"; // Make the iframe visible
+            } else {
+                document.getElementById('message').innerText = "Invalid email or it's an exception.";
+                document.getElementById('message').style.color = "red";
+                
+                // Hide the Google Form iframe if the email is invalid
+                document.getElementById('googleForm').style.display = "none"; // Ensure iframe is hidden
+            }
+        });
+
+        // Admin login logic
+        const correctPassword = 'admin123'; // Change this to a secure password
+        document.getElementById('adminLogin').addEventListener('click', function() {
+            const enteredPassword = document.getElementById('adminPassword').value.trim();
+            if (enteredPassword === correctPassword) {
+                document.getElementById('adminInput').style.display = 'block'; // Show admin input
+                document.getElementById('adminPassword').value = ''; // Clear password input
+                document.getElementById('adminMessage').innerText = ''; // Clear messages
+            } else {
+                document.getElementById('adminMessage').innerText = "Incorrect password.";
+                document.getElementById('adminMessage').style.color = "red";
+            }
+        });
+
+        // Change allowed parts function
+        document.getElementById('changeAllowedParts').addEventListener('click', function() {
+            const newPartsInput = document.getElementById('allowedPartsInput').value.trim();
+            if (newPartsInput) {
+                allowedParts = newPartsInput.split(',').map(part => part.trim());
+                primaryPattern = createRegex(allowedParts); // Update the regex pattern
+                document.getElementById('adminMessage').innerText = "Allowed parts updated!";
+                document.getElementById('adminMessage').style.color = "green";
+                document.getElementById('allowedPartsInput').value = ''; // Clear input
+            } else {
+                document.getElementById('adminMessage').innerText = "Please enter valid allowed parts.";
+                document.getElementById('adminMessage').style.color = "red";
+            }
+        });
+    </script>
+</body>
+</html>

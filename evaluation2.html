@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Validation Form</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        input {
+            margin: 10px 0;
+            padding: 10px;
+            width: 300px;
+        }
+        button {
+            padding: 10px 15px;
+        }
+        #message {
+            margin-top: 10px;
+            color: red; /* Default to red for error messages */
+        }
+        #adminSection {
+            margin-top: 20px;
+        }
+        #adminInput {
+            display: none; /* Hide admin input by default */
+        }
+    </style>
+</head>
+<body>
+    <h2>Email Submission Form</h2>
+    <form id="emailForm">
+        <label for="email">Enter your email:</label><br>
+        <input type="text" id="email" name="email" required placeholder="example.cs.aiml22@gla.ac.in"><br>
+        
+        <button type="submit">Validate and Proceed</button>
+        <div id="message"></div>
+    </form>
+
+    <div id="adminSection">
+        <h3>Admin Section</h3>
+        <input type="password" id="adminPassword" placeholder="Enter admin password"><br>
+        <button id="adminLogin">Login</button>
+        <div id="adminInput">
+            <input type="text" id="allowedPartsInput" placeholder="Enter new allowed parts (comma separated)">
+            <button id="changeAllowedParts">Change Allowed Parts</button>
+            <input type="text" id="exceptionsInput" placeholder="Enter exceptions (comma separated)">
+            <button id="changeExceptions">Change Exceptions</button>
+            <div id="adminMessage"></div>
+        </div>
+    </div>
+
+    <script>
+        let allowedParts = ['aiml', 'da', 'csf']; // Initial allowed parts for the email
+        let exceptions = []; // Array to hold full email exceptions
+
+        // Function to create regex for the primary pattern
+        function createPrimaryRegex(parts) {
+            const joinedParts = parts.join('|');
+            return new RegExp(`^[a-zA-Z0-9._%+-]+\\.cs\\.(${joinedParts}|)\\d{2}@gla\\.ac\\.in$`);
+        }
+
+        // Function to create regex for exceptions
+        function createExceptionRegex(exceptions) {
+            const joinedExceptions = exceptions.join('|');
+            return new RegExp(`^[a-zA-Z0-9._%+-]+\\.cs\\.(${joinedExceptions}|)\\d{2}@gla\\.ac\\.in$`);
+        }
+
+        let primaryPattern = createPrimaryRegex(allowedParts);
+
+        // Validate function
+        function validateEmail(email) {
+            return primaryPattern.test(email) && !exceptions.includes(email);
+        }
+
+        // Form submission event listener
+        document.getElementById('emailForm').addEventListener('submit', function(event) {
+            event.preventDefault(); // Prevent default form submission
+
+            const emailInput = document.getElementById('email').value.trim();
+
+            // Validate email
+            if (validateEmail(emailInput)) {
+                // Show success message
+                document.getElementById('message').innerText = "Email is valid! Redirecting to the form...";
+                document.getElementById('message').style.color = "green";
+
+                // Redirect to the Google Form page
+                localStorage.setItem('validEmail', emailInput); // Store the valid email
+                window.location.href = 'form.html'; // Redirect to the form page
+            } else {
+                document.getElementById('message').innerText = "Invalid email or it's an exception.";
+                document.getElementById('message').style.color = "red";
+            }
+        });
+
+        // Admin login logic
+        const correctPassword = 'admin123'; // Change this to a secure password
+        document.getElementById('adminLogin').addEventListener('click', function() {
+            const enteredPassword = document.getElementById('adminPassword').value.trim();
+            if (enteredPassword === correctPassword) {
+                document.getElementById('adminInput').style.display = 'block'; // Show admin input
+                document.getElementById('adminPassword').value = ''; // Clear password input
+                document.getElementById('adminMessage').innerText = ''; // Clear messages
+            } else {
+                document.getElementById('adminMessage').innerText = "Incorrect password.";
+                document.getElementById('adminMessage').style.color = "red";
+            }
+        });
+
+        // Change allowed parts function
+        document.getElementById('changeAllowedParts').addEventListener('click', function() {
+            const newPartsInput = document.getElementById('allowedPartsInput').value.trim();
+            if (newPartsInput) {
+                allowedParts = newPartsInput.split(',').map(part => part.trim());
+                primaryPattern = createPrimaryRegex(allowedParts); // Update the regex pattern
+                localStorage.setItem('allowedParts', JSON.stringify(allowedParts)); // Save to localStorage
+                document.getElementById('adminMessage').innerText = "Allowed parts updated!";
+                document.getElementById('adminMessage').style.color = "green";
+                document.getElementById('allowedPartsInput').value = ''; // Clear input
+            } else {
+                document.getElementById('adminMessage').innerText = "Please enter valid allowed parts.";
+                document.getElementById('adminMessage').style.color = "red";
+            }
+        });
+
+        // Change exceptions function
+        document.getElementById('changeExceptions').addEventListener('click', function() {
+            const newExceptionsInput = document.getElementById('exceptionsInput').value.trim();
+            if (newExceptionsInput) {
+                exceptions = newExceptionsInput.split(',').map(email => email.trim());
+                localStorage.setItem('exceptions', JSON.stringify(exceptions)); // Save to localStorage
+                document.getElementById('adminMessage').innerText = "Exceptions updated!";
+                document.getElementById('adminMessage').style.color = "green";
+                document.getElementById('exceptionsInput').value = ''; // Clear input
+            } else {
+                document.getElementById('adminMessage').innerText = "Please enter valid exceptions.";
+                document.getElementById('adminMessage').style.color = "red";
+            }
+        });
+
+        // Load allowed parts and exceptions from localStorage or set defaults
+        allowedParts = JSON.parse(localStorage.getItem('allowedParts')) || ['aiml', 'da', 'csf'];
+        exceptions = JSON.parse(localStorage.getItem('exceptions')) || []; // Load exceptions from localStorage
+    </script>
+</body>
+</html>
